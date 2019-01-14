@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <!-- 引入easyui的css和js -->
+    <link rel="stylesheet" href="./lib/jquery-easyui-1.7.0/themes/bootstrap/easyui.css">
+    <link rel="stylesheet" href="./lib/jquery-easyui-1.7.0/themes/icon.css">
+    <!-- jQuery -->
+    <script src="./lib/jquery-easyui-1.7.0/jquery.min.js"></script>
+    <!-- easyui的全部脚本 -->
+    <script src="./lib/jquery-easyui-1.7.0/jquery.easyui.min.js"></script>
+    <!-- 语言包 -->
+    <script src="./lib/jquery-easyui-1.7.0/locale/easyui-lang-zh_CN.js"></script>
+
+    <script src="./lib/sha1.js"></script>
+    
+    <script src="https://cdn.bootcss.com/js-cookie/latest/js.cookie.min.js"></script>
+
+    <title>登录</title>
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+
+        }
+        .login-wrap{
+            width: 300px;
+            height: 200px;
+            border: 1px solid #ccc;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            box-sizing: border-box;
+            margin-left: -150px;
+            margin-top: -100px;
+        }
+        #formLogin{
+            padding: 40px;
+        }
+        .btn{
+            width: 60px;
+            height: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-wrap">
+        <form id="formLogin">
+            <table>
+                <tr>
+                    <td>用户名:</td>
+                    <td>
+                        <input type="text" class="easyui-textbox" data-options="iconCls:'icon-man',prompt:'用户名',required:true,validType:['length[4,8]']" name="username" >
+                    </td>
+                </tr>
+                <tr>
+                    <td>密码:</td>
+                    <td>
+                        <input type="password" class="easyui-passwordbox" data-options="prompt:'密码',required:true,validType:['length[4,8]']" name="password" >
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input class="easyui-linkbutton btn" type="button" value="登录" id="btnLogin">
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+
+    <script>
+        $(function () {  
+            $('#btnLogin').on('click',function () {  
+                // 校验表单中的所有的校验的文本框是否都校验成功
+                if($('#formLogin').form('validate')){
+                    // 拿到表单数据
+                    var formData = $('#formLogin').serializeArray();
+                    formData[1].value = b64_sha1(formData[1].value);
+                    console.log(formData);
+
+
+                    // 发送ajax请求到后台，校验用户名和密码是否正确
+                    $.ajax({
+                        url:'/authLogin',
+                        type:'POST',
+                        data: formData,   // $('#formLogin').serialize(), // 序列化表单
+                        success:function(data){
+                            // 登录成功：{code:1,msg:'成功',auth_token:'xxxxxxxx'}
+                            // 登录失败：{code:8,msg:'登录失败'}
+                            if(data.code===8){
+                                $.messager.alert('提示消息','登录失败','warning')
+                            }else{
+                                // 后台返回的登录的token放到我们的cookie中。主页面就可以通过cookie拿到auth_token
+                                Cookies.set('auth_token',data.auth_token,{path:'/'});
+                                // $.messager.alert('提示消息','登录成功','info');
+                                window.location.href = './admin.html';
+                            }
+                        }
+                    })
+                }else{
+                    $.messager.alert('消息提示','请输入规范的用户名和密码','warning')
+                }
+            })
+        })
+    </script>
+</body>
+
+</html>
